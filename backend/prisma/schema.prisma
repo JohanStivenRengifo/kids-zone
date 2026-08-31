@@ -1,0 +1,82 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "windows", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Inscripcion {
+  id            Int       @id @default(autoincrement())
+  nombre        String
+  apellido      String
+  cedula        String    @unique
+  fechaNac      DateTime  @map("fecha_nac")
+  representante String
+  telefono      String
+  email         String
+  hashDocumento String    @unique @map("hash_documento")
+  txHash        String?   @map("tx_hash")
+  walletAddress String?   @map("wallet_address")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  matriculas Matricula[]
+
+  @@map("inscripciones")
+}
+
+model Matricula {
+  id            Int       @id @default(autoincrement())
+  inscripcionId Int       @map("inscripcion_id")
+  anno          Int
+  grado         String
+  estado        String    @default("activa")
+  hashDocumento String    @unique @map("hash_documento")
+  txHash        String?   @map("tx_hash")
+  walletAddress String?   @map("wallet_address")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  inscripcion   Inscripcion   @relation(fields: [inscripcionId], references: [id], onDelete: Cascade)
+  pagos         Pago[]
+  certificados  Certificado[]
+
+  @@map("matriculas")
+}
+
+model Pago {
+  id            Int       @id @default(autoincrement())
+  matriculaId   Int       @map("matricula_id")
+  monto         Float
+  concepto      String
+  fecha         DateTime  @default(now())
+  comprobante   String?
+  hashDocumento String    @unique @map("hash_documento")
+  txHash        String?   @map("tx_hash")
+  walletAddress String?   @map("wallet_address")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  matricula Matricula @relation(fields: [matriculaId], references: [id], onDelete: Cascade)
+
+  @@map("pagos")
+}
+
+model Certificado {
+  id            Int       @id @default(autoincrement())
+  matriculaId   Int       @map("matricula_id")
+  titulo        String
+  pdfCid        String?   @map("pdf_cid")
+  hashDocumento String    @unique @map("hash_documento")
+  txHash        String?   @map("tx_hash")
+  walletAddress String?   @map("wallet_address")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  matricula Matricula @relation(fields: [matriculaId], references: [id], onDelete: Cascade)
+
+  @@map("certificados")
+}
