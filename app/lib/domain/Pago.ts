@@ -1,15 +1,12 @@
-/**
- * Diagrama:
- *  Pago { id_pago, monto, metodo, fecha, estado, confirmarPago() }
- *  Acudiente "1" --> "*" Pago : realiza
- *  Pago "1" --> "1" SmartContract : es_procesado_por
- *
- * Reusa Payment (lib/payments) para validación/serialización — evita duplicar reglas.
- */
-import type { Estudiante } from "./Estudiante";
-import { Payment as InfraPayment } from "@/lib/payments";
+// representa un pago realizado por un acudiente
+import type { Estudiante } from './Estudiante';
+import { Payment as InfraPayment } from '@/lib/payments';
 
-export type EstadoPagoTransaccion = "pendiente" | "confirmado" | "anulado" | "rechazado";
+export type EstadoPagoTransaccion =
+  | 'pendiente'
+  | 'confirmado'
+  | 'anulado'
+  | 'rechazado';
 
 export class Pago {
   public readonly id_pago: string;
@@ -41,18 +38,18 @@ export class Pago {
     this.acudienteId = args.acudienteId;
     this.estudiante = args.estudiante;
     this.fecha = args.fecha ?? new Date();
-    this.estado = args.estado ?? "pendiente";
+    this.estado = args.estado ?? 'pendiente';
   }
 
   /** Diagrama: confirmarPago() */
   confirmarPago(): void {
-    if (this.estado !== "pendiente") return;
-    this.estado = "confirmado";
+    if (this.estado !== 'pendiente') return;
+    this.estado = 'confirmado';
     this.fecha = new Date();
   }
 
   anular(): void {
-    this.estado = "anulado";
+    this.estado = 'anulado';
   }
 
   /** Valida con la misma regla que la cadena existente */
@@ -73,7 +70,7 @@ export class Pago {
       this.conceptoId,
       this.monto,
       this.metodo,
-      this.periodo,
+      this.periodo
     ).toString();
   }
 }

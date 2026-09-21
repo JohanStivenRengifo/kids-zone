@@ -1,12 +1,7 @@
-/**
- * Diagrama:
- *  Bloque { hash, hash_anterior, id_pago, monto, fecha, estado, registrarTransaccion() }
- *  SmartContract "1" --> "*" Bloque : registra
- *  Bloque "1" --> "1" Comprobante : genera
- */
-import type { Block } from "@/lib/kernel/Block";
-import type { Pago } from "./Pago";
-import { Comprobante } from "./Comprobante";
+// registra bloque en la cadena
+import type { Block } from '@/lib/kernel/Block';
+import type { Pago } from './Pago';
+import { Comprobante } from './Comprobante';
 
 export class Bloque {
   public readonly hash: string;
@@ -18,21 +13,20 @@ export class Bloque {
 
   private constructor(
     private raw: Block,
-    pago?: Pago,
+    pago?: Pago
   ) {
-    this.hash = raw.hash ?? "";
+    this.hash = raw.hash ?? '';
     this.hash_anterior = raw.previousHash;
     this.id_pago = pago?.id_pago ?? `bloque-${raw.index}`;
     this.monto = pago?.monto ?? 0;
     this.fecha = new Date(raw.date);
-    this.estado = pago?.estado ?? "confirmado";
+    this.estado = pago?.estado ?? 'confirmado';
   }
 
   static desdeBlock(raw: Block, pago?: Pago): Bloque {
     return new Bloque(raw, pago);
   }
 
-  /** Diagrama: registrarTransaccion() — en la app es Blockchain.addBlock() via SmartContract */
   registrarTransaccion(): Block {
     return this.raw;
   }

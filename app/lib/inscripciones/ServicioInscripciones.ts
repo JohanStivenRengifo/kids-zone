@@ -1,10 +1,9 @@
-/**
- * Servicio Inscripciones — reutiliza kernel (Blockchain/Repository) sin duplicar.
- * Orquesta I→J→K→L→G y Q/R (Registro Académico Unificado / Participación)
+// Servicio Inscripciones
  */
 import type { Blockchain } from "@/lib/kernel/Blockchain";
 import type { ChainRepository } from "@/lib/kernel/ChainStorage";
 import { Inscripcion, type InscripcionData } from "./Inscripcion";
+import { registrarEstudiante } from "./StudentRegistry";
 import { Estudiante } from "@/lib/domain/Estudiante";
 import { Acudiente } from "@/lib/domain/Acudiente";
 import { EstadoPago } from "@/lib/domain/EstadoPago";
@@ -12,11 +11,11 @@ import { CATALOGO_CONCEPTOS } from "@/lib/domain/catalog";
 
 export class ServicioInscripciones {
   constructor(
-    private chain: Blockchain,
-    private repository: ChainRepository,
+    private chain?: Blockchain | null,
+    private repository?: ChainRepository | null,
   ) {}
 
-  /** Inscribe y crea EstadoPago iniciales (F: pagos cuotas/servicios) */
+  /** Inscribe en el registro compartido y crea EstadoPago iniciales (F: pagos cuotas/servicios) */
   inscribir(data: InscripcionData): { ok: boolean; error?: string; inscripcion?: Inscripcion } {
     const msg = Inscripcion.validate(data);
     if (msg) return { ok: false, error: msg };
@@ -29,8 +28,13 @@ export class ServicioInscripciones {
       data.periodo,
       new Date(),
     );
-    this.chain.addBlock(ins.toBlockData());
-    this.repository.save(this.chain.toJSON());
+    // Único compartido: lista de estudiantes. Sin bloques globales.
+    registrarEstudiante({
+      nombre: data.estudianteNombre,
+      grado: data.grado,
+      periodo: data.periodo,
+      acudienteNombre: data.acudienteNombre,
+    });
 
     // Crea estudiante/acudiente y estados pendientes (conecta con /pagos)
     const est = new Estudiante(`est-${Date.now()}`, data.estudianteNombre, data.grado);
@@ -43,8 +47,9 @@ export class ServicioInscripciones {
     return { ok: true, inscripcion: ins };
   }
 
-  /** Q: Actualización Registro Académico Unificado — bloque tipo REGISTRO */
+  /** Q: Actualización Registro Académico Unificado — bloque al final (append-only) */
   registrarAvance(estudianteNombre: string, materia: string, periodo: string): void {
+    if (!this.chain || !this.repository) throw new Error("Sin cadena de notas del estudiante.");
     this.chain.addBlock(`REGISTRO | ${estudianteNombre} | ${materia} | ${periodo}`);
     this.repository.save(this.chain.toJSON());
   }

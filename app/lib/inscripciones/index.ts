@@ -1,3 +1,4 @@
-export * from "./Inscripcion";
-export * from "./ServicioInscripciones";
-export * from "./registry";
+export * from './Inscripcion';
+export * from './ServicioInscripciones';
+export * from './registry';
+export * from './StudentRegistry';

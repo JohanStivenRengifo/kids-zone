@@ -3,16 +3,16 @@
  *  Acudiente "1" --> "1" Estudiante : es_responsable_de
  *  Acudiente "1" --> "*" Pago : realiza
  */
-import type { EstadoPago } from "./EstadoPago";
-import { Pago } from "./Pago";
-import type { Estudiante } from "./Estudiante";
+import type { EstadoPago } from './EstadoPago';
+import { Pago } from './Pago';
+import type { Estudiante } from './Estudiante';
 
 export class Acudiente {
   constructor(
     public readonly id_acudiente: string,
     public nombre: string,
     public wallet_address: string,
-    private estudiante: Estudiante,
+    private estudiante: Estudiante
   ) {}
 
   getEstudiante(): Estudiante {
@@ -24,7 +24,7 @@ export class Acudiente {
     return this.estudiante.getEstadosPendientes();
   }
 
-  /** Diagrama: realizarPago() — crea un Pago; la confirmación la hace SmartContract */
+  // crea un Pago
   realizarPago(args: {
     conceptoId: string;
     monto: number;
