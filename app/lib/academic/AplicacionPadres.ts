@@ -14,11 +14,16 @@ export class AplicacionPadres {
     public readonly registro: RegistroBlockchain,
   ) {}
 
-  static enviarFamilia(diploma: DiplomaPDF, registro: RegistroBlockchain, usuario = "Familia Cali"): AplicacionPadres {
+  static enviarFamilia(
+    diploma: DiplomaPDF,
+    registro: RegistroBlockchain,
+    usuario = "Familia Cali",
+    codigoQR = `Enlace a ${registro.idTransaccion}`,
+  ): AplicacionPadres {
     return new AplicacionPadres(
       usuario,
       `diploma_${diploma.estudiante.toLowerCase().replace(/\s+/g, "_")}.pdf`,
-      `Enlace a ${registro.idTransaccion}`,
+      codigoQR,
       diploma,
       registro,
     );

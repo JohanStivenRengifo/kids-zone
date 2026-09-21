@@ -9,3 +9,7 @@ export * from "./Certificado";
 export * from "./ServicioAcademico";
 export * from "./VerificacionEstado";
 export * from "./Consultas";
+export * from "./Actores";
+export * from "./Calificacion";
+export * from "./RegistroDeModificacion";
+export * from "./ServicioCalificaciones";

@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { ChainStatus } from "@/components/payments/ChainStatus";
 import { ChainList } from "@/components/payments/ChainList";
+import { QRCodeView } from "@/components/qr/QRCodeView";
+import { VerificacionEscaneada } from "@/components/qr/VerificacionEscaneada";
 import { useCadenaIntegrada } from "@/hooks/useCadenaIntegrada";
 import { usePaymentChain } from "@/hooks/usePaymentChain";
 import { DiplomaPDF } from "@/lib/academic/DiplomaPDF";
@@ -11,6 +13,7 @@ import { AplicacionPadres } from "@/lib/academic/AplicacionPadres";
 import { Verificador } from "@/lib/academic/Verificador";
 import { Emisor } from "@/lib/academic/Emisor";
 import { getEstudiantesInscritos } from "@/lib/inscripciones/registry";
+import { buildVerificationUrl } from "@/lib/qr/verificar";
 
 export default function CertificadosPage() {
   const { snapshot } = useCadenaIntegrada();
@@ -26,6 +29,7 @@ export default function CertificadosPage() {
   const [app, setApp] = useState<AplicacionPadres | null>(null);
   const [verif, setVerif] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [qrUrl, setQrUrl] = useState<string | null>(null);
 
   function generar() {
     setError(null);
@@ -47,10 +51,12 @@ export default function CertificadosPage() {
     const nivelFinal = sel?.grado ?? nivel.trim();
     const pdf = DiplomaPDF.generar(estudiante, nivelFinal, fecha.trim());
     const reg = RegistroBlockchain.guardar(pdf.hashUnico, chain, repo, Emisor.CARRUSEL, fecha.trim());
-    const aplic = AplicacionPadres.enviarFamilia(pdf, reg);
+    const url = buildVerificationUrl("/certificados", chain.getLast().hash ?? "");
+    const aplic = AplicacionPadres.enviarFamilia(pdf, reg, "Familia Cali", url);
     setDiploma(pdf);
     setRegistro(reg);
     setApp(aplic);
+    setQrUrl(url);
     setVerif(null);
     store.refresh();
   }
@@ -68,6 +74,10 @@ export default function CertificadosPage() {
       <h1 className="text-2xl font-semibold">Kids Zone — Certificados</h1>
       <p className="text-sm text-slate-600">Solo estudiantes inscritos pueden recibir diplomas. El código queda guardado en la cadena.</p>
       <ChainStatus status={snapshot.loaded ? (snapshot.validation.ok ? "Registros íntegros." : `Se detectó una alteración en el registro ${(snapshot.validation as { i: number }).i}.`) : "Cargando…"} ok={snapshot.validation.ok} />
+
+      <Suspense fallback={null}>
+        <VerificacionEscaneada ruta="/certificados" />
+      </Suspense>
 
       <section className="border rounded p-4 flex flex-col gap-3 max-w-md">
         <h2 className="font-medium">Generar diploma</h2>
@@ -96,7 +106,8 @@ export default function CertificadosPage() {
             {error ? <p className="text-sm text-red-600">{error}</p> : null}
             {diploma ? <p className="text-sm">Diploma de <b>{diploma.estudiante}</b> — Nivel {diploma.nivel} — Código: <span className="font-mono">{diploma.hashUnico}</span></p> : null}
             {registro ? <p className="text-sm">Guardado con código <span className="font-mono">{registro.idTransaccion}</span> — firmado por {registro.firmadoPor}</p> : null}
-            {app ? <p className="text-sm">Enviado a {app.usuario} como {app.documentoAdjunto} — QR: {app.codigoQR}</p> : null}
+            {app ? <p className="text-sm">Enviado a {app.usuario} como {app.documentoAdjunto} — QR: <span className="font-mono text-xs">{app.codigoQR}</span></p> : null}
+            {qrUrl ? <QRCodeView payload={qrUrl} caption="Código QR del diploma — escanea para verificar." /> : null}
           </>
         )}
       </section>
